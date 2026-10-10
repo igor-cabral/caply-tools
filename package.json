@@ -1,0 +1,16 @@
+{
+  "name": "caply-tools",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Caply Tools — ferramentas online gratuitas, sem cadastro, processadas no navegador.",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs && node scripts/serve.mjs",
+    "start": "node scripts/serve.mjs",
+    "test": "node --test \"tests/*.test.mjs\"",
+    "lint": "node scripts/lint.mjs",
+    "check": "npm run lint && npm test && npm run build"
+  }
+}

@@ -7,7 +7,7 @@ export default function raffle() {
 ${toolHero(t, 'Cole a lista de participantes, escolha quantos vencedores você quer e sorteie. Cada pessoa só pode ser sorteada uma vez por rodada.')}
 <div class="wrap">
   <div class="tool" id="rf-tool">
-    <form class="panel" id="rf-form" novalidate>
+    <form class="panel" id="rf-form" aria-label="Dados do sorteio" novalidate>
       <div class="field">
         <label for="rf-names">Participantes (um nome por linha)</label>
         <textarea id="rf-names" rows="10" autocomplete="off" spellcheck="false" aria-describedby="rf-count" placeholder="Ana Souza&#10;Bruno Lima&#10;Carla Dias"></textarea>

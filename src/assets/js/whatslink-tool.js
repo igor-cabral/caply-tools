@@ -1,9 +1,10 @@
 import { whatsLink } from './whatslink-lib.js';
-import { $, copyText, setError, setStatus } from './ui.js';
+import { $, copyText, flashButton, setError, setStatus } from './ui.js';
 
 const phone = $('wl-phone'), msg = $('wl-msg'), out = $('wl-out');
 const errorEl = $('wl-error'), warn = $('wl-warn'), statusEl = $('wl-status');
-const btnCopy = $('wl-copy'), open = $('wl-open'), qr = $('wl-qr');
+const btnCopy = $('wl-copy'), open = $('wl-open'), qr = $('wl-qr'), fix = $('wl-fix');
+let suggestion = '';
 let touched = false;
 
 function setLinks(url) {
@@ -22,6 +23,7 @@ function render() {
   setStatus(statusEl, '');
   $('wl-count').textContent = String(msg.value.length);
   warn.textContent = '';
+  suggestion = ''; fix.hidden = true;
   if (!phone.value.trim()) { setError(errorEl, '', [phone]); setLinks(''); return; }
   const r = whatsLink(phone.value, msg.value);
   if (!r.ok) {
@@ -31,6 +33,7 @@ function render() {
   }
   setError(errorEl, '', [phone]);
   warn.textContent = r.hint || '';
+  if (r.suggestion) { suggestion = r.suggestion; fix.textContent = 'Adicionar o código +55'; fix.hidden = false; }
   setLinks(r.url);
 }
 
@@ -39,7 +42,15 @@ $('wl-form').addEventListener('submit', (e) => { e.preventDefault(); touched = t
 [open, qr].forEach((a) => a.addEventListener('click', (e) => { if (a.getAttribute('aria-disabled') === 'true') e.preventDefault(); }));
 btnCopy.addEventListener('click', async () => {
   const ok = await copyText(out.value);
+  if (ok) flashButton(btnCopy);
   setStatus(statusEl, ok ? 'Link copiado.' : 'Não foi possível copiar. Selecione o link e copie manualmente.', ok ? 'ok' : 'err');
+});
+fix.addEventListener('click', () => {
+  if (!suggestion) return;
+  phone.value = `+${suggestion}`;
+  touched = true;
+  render();
+  phone.focus();
 });
 setLinks('');
 render();

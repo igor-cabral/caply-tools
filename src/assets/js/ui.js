@@ -7,7 +7,20 @@ export function setStatus(el, message, kind = '') {
 
 export function setError(el, message, inputs = []) {
   el.textContent = message || '';
-  inputs.forEach((i) => { if (message) i.setAttribute('aria-invalid', 'true'); else i.removeAttribute('aria-invalid'); });
+  inputs.forEach((i) => {
+    const ids = new Set((i.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean));
+    if (message) { i.setAttribute('aria-invalid', 'true'); ids.add(el.id); } else { i.removeAttribute('aria-invalid'); ids.delete(el.id); }
+    if (ids.size) i.setAttribute('aria-describedby', [...ids].join(' ')); else i.removeAttribute('aria-describedby');
+  });
+}
+
+/** Feedback temporário em um botão (ex.: "Copiado!"), conforme o design system (1,8 s). */
+export function flashButton(btn, text = 'Copiado!', ms = 1800) {
+  if (!btn.dataset.label) btn.dataset.label = btn.textContent;
+  btn.textContent = text;
+  btn.classList.add('is-done');
+  clearTimeout(btn._flash);
+  btn._flash = setTimeout(() => { btn.textContent = btn.dataset.label; btn.classList.remove('is-done'); }, ms);
 }
 
 export async function copyText(text) {

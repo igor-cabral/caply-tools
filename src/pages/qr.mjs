@@ -7,7 +7,7 @@ export default function qr() {
 ${toolHero(t, 'Transforme um link, um texto ou os dados da sua rede Wi-Fi em um QR Code pronto para imprimir ou compartilhar. Tudo é gerado aqui no seu navegador.')}
 <div class="wrap">
   <div class="tool" id="qr-tool">
-    <form class="panel" id="qr-form" novalidate>
+    <form class="panel" id="qr-form" aria-label="Dados do QR Code" novalidate>
       <fieldset class="seg">
         <legend>O que o QR Code vai conter?</legend>
         <label><input type="radio" name="kind" value="url" checked><span>Link</span></label>

@@ -45,7 +45,7 @@ export function build({ outDir = join(root, 'dist'), log = true } = {}) {
 
   // Cabeçalhos de segurança (Netlify/Cloudflare Pages). Para outros hosts, replique no servidor.
   const csp = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
-  writeFileSync(join(outDir, '_headers'), `/*\n  Content-Security-Policy: ${csp}\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n`);
+  writeFileSync(join(outDir, '_headers'), `/*\n  Content-Security-Policy: ${csp}\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  Cross-Origin-Opener-Policy: same-origin\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n`);
 
   if (log) console.log(`Build concluído em ${outDir}: ${pages.length} páginas (${indexable.length} indexáveis). URL pública: ${site.siteUrl || '(nenhuma)'}`);
   return { outDir, pages };

@@ -50,21 +50,31 @@ async function loadImage(url) {
   return img;
 }
 
-async function handleFile(file) {
+let loadToken = 0; // invalida carregamentos antigos quando o usuário escolhe outra imagem
+
+async function handleFile(file, totalChosen = 1) {
+  const token = ++loadToken;
+  const stale = () => token !== loadToken;
   reset();
   if (!file) return;
+  let url = null;
   try {
     const head = new Uint8Array(await file.slice(0, 16).arrayBuffer());
+    if (stale()) return;
     const type = sniffImageType(head);
     const v = validateImageFile(file, type);
     if (!v.ok) { setError(errorEl, v.error); return; }
-    const url = URL.createObjectURL(file);
-    state.srcUrl = url;
+    url = URL.createObjectURL(file);
     let img;
-    try { img = await loadImage(url); } catch { revoke('srcUrl'); setError(errorEl, 'Não foi possível abrir essa imagem. O arquivo pode estar corrompido.'); return; }
+    try { img = await loadImage(url); } catch {
+      URL.revokeObjectURL(url);
+      if (!stale()) setError(errorEl, 'Não foi possível abrir essa imagem. O arquivo pode estar corrompido.');
+      return;
+    }
+    if (stale()) { URL.revokeObjectURL(url); return; }
     const dims = validateDimensions(img.naturalWidth, img.naturalHeight);
-    if (!dims.ok) { revoke('srcUrl'); setError(errorEl, dims.error); return; }
-    state.file = file; state.img = img; state.type = type;
+    if (!dims.ok) { URL.revokeObjectURL(url); setError(errorEl, dims.error); return; }
+    state = { file, srcUrl: url, outUrl: null, img, type };
     srcImg.src = url;
     srcInfo.textContent = `${file.name}: ${img.naturalWidth}×${img.naturalHeight} px, ${formatBytes(file.size)}`;
     // Sugere um formato de saída diferente do original.
@@ -72,10 +82,12 @@ async function handleFile(file) {
     document.querySelector(`input[name="fmt"][value="${suggestion}"]`).checked = true;
     sourceBox.hidden = false;
     syncOptions();
-    setStatus(statusEl, 'Imagem carregada. Escolha o formato e clique em Converter.', 'ok');
+    setStatus(statusEl, totalChosen > 1
+      ? `Usamos apenas a primeira das ${totalChosen} imagens escolhidas. Escolha o formato e clique em Converter.`
+      : 'Imagem carregada. Escolha o formato e clique em Converter.', 'ok');
   } catch {
-    reset();
-    setError(errorEl, 'Ocorreu um erro ao ler o arquivo. Tente novamente com outra imagem.');
+    if (url) URL.revokeObjectURL(url);
+    if (!stale()) { reset(); setError(errorEl, 'Ocorreu um erro ao ler o arquivo. Tente novamente com outra imagem.'); }
   }
 }
 
@@ -119,12 +131,15 @@ async function convert() {
   }
 }
 
-fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+fileInput.addEventListener('change', () => handleFile(fileInput.files[0], fileInput.files.length));
 ['dragenter', 'dragover'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('is-over'); }));
 ['dragleave', 'drop'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('is-over'); }));
-drop.addEventListener('drop', (e) => { const f = e.dataTransfer?.files?.[0]; if (f) handleFile(f); });
+drop.addEventListener('drop', (e) => { const files = e.dataTransfer?.files; if (files?.length) handleFile(files[0], files.length); });
 document.querySelectorAll('input[name="fmt"]').forEach((r) => r.addEventListener('change', () => { syncOptions(); clearResult(); }));
-quality.addEventListener('input', () => { qualityOut.textContent = quality.value; });
+quality.addEventListener('input', () => {
+  qualityOut.textContent = quality.value;
+  if (!resultBox.hidden) { clearResult(); setStatus(statusEl, 'Qualidade alterada. Clique em Converter para gerar a nova imagem.'); }
+});
 btnConvert.addEventListener('click', convert);
-$('im-reset').addEventListener('click', reset);
+$('im-reset').addEventListener('click', () => { loadToken++; reset(); });
 window.addEventListener('pagehide', () => { revoke('srcUrl'); revoke('outUrl'); });

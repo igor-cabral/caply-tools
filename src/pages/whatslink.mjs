@@ -7,7 +7,7 @@ export default function whatslink() {
 ${toolHero(t, 'Crie um link que abre direto uma conversa no WhatsApp, com uma mensagem inicial se você quiser. Ideal para site, bio de rede social, cartão de visita e e-mail.')}
 <div class="wrap">
   <div class="tool" id="wl-tool">
-    <form class="panel" id="wl-form" novalidate>
+    <form class="panel" id="wl-form" aria-label="Dados do link do WhatsApp" novalidate>
       <div class="field">
         <label for="wl-phone">Número com código do país</label>
         <input id="wl-phone" type="tel" inputmode="tel" autocomplete="off" placeholder="+55 48 99999-9999" aria-describedby="wl-phone-hint">
@@ -20,6 +20,7 @@ ${toolHero(t, 'Crie um link que abre direto uma conversa no WhatsApp, com uma me
       </div>
       <p class="field-error" id="wl-error" role="alert"></p>
       <p class="field-hint-warn" id="wl-warn"></p>
+      <p><button type="button" class="btn btn-secondary btn-sm" id="wl-fix" hidden>Adicionar o código +55</button></p>
     </form>
 
     <div class="panel result" aria-labelledby="wl-res-t">

@@ -32,6 +32,22 @@ test('todas as páginas existem e têm estrutura semântica básica', () => {
   }
 });
 
+test('títulos ≤ 65 caracteres e descrições entre 70 e 160 (SEO)', () => {
+  for (const p of pages) {
+    assert.ok(p.title.length <= 65, `${p.path}: título com ${p.title.length}`);
+    assert.ok(p.description.length >= 70 && p.description.length <= 160, `${p.path}: descrição com ${p.description.length}`);
+  }
+});
+
+test('acessibilidade estrutural: main focável para o link de pulo e formulários nomeados', () => {
+  for (const p of pages) {
+    const html = htmlOf(p);
+    assert.match(html, /<main id="conteudo" tabindex="-1">/, p.path);
+    assert.match(html, /href="#conteudo"/);
+    for (const m of html.matchAll(/<form\b[^>]*>/g)) assert.match(m[0], /aria-label="[^"]+"/, `${p.path}: form sem nome`);
+  }
+});
+
 test('títulos e descrições são únicos', () => {
   const titles = pages.map((p) => p.title); const descs = pages.map((p) => p.description);
   assert.equal(new Set(titles).size, titles.length);
@@ -98,6 +114,10 @@ test('padrão de produção: canonical, og:url, sitemap e robots usam tools.igor
   assert.equal((sm.match(/<loc>/g) || []).length, 6);
   assert.ok(sm.includes(`<loc>${PROD}/</loc>`) && !sm.includes('404') && !sm.includes('localhost'));
   assert.match(readFileSync(join(dir2, 'robots.txt'), 'utf8'), new RegExp(`Sitemap: ${PROD}/sitemap\\.xml`));
+  const home = readFileSync(join(dir2, 'index.html'), 'utf8');
+  assert.ok(home.includes(`<meta property="og:image" content="${PROD}/assets/og-image.png">`));
+  assert.match(home, /twitter:card" content="summary_large_image"/);
+  assert.ok(existsSync(join(dir2, 'assets/og-image.png')), 'imagem OG existe no build');
   assert.ok(!readFileSync(join(dir2, '404.html'), 'utf8').includes('canonical'));
   assert.match(readFileSync(join(dir2, '404.html'), 'utf8'), /noindex/);
 });
@@ -106,6 +126,7 @@ test('SITE_URL vazia desliga canonical e sitemap', () => {
   const dir = buildWithEnv({ SITE_URL: '' });
   assert.ok(!existsSync(join(dir, 'sitemap.xml')));
   assert.ok(!readFileSync(join(dir, 'index.html'), 'utf8').includes('rel="canonical"'));
+  assert.ok(!readFileSync(join(dir, 'index.html'), 'utf8').includes('og:image'), 'sem URL absoluta não há og:image');
   assert.match(readFileSync(join(dir, 'robots.txt'), 'utf8'), /Allow: \//);
 });
 

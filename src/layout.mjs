@@ -38,6 +38,7 @@ function footer() {
 /** Monta uma página HTML completa. */
 export function renderPage({ path, title, description, body, scripts = [], noindex = false }) {
   const canonical = site.siteUrl && !noindex ? `${site.siteUrl}${path}` : '';
+  const ogImage = site.siteUrl ? `${site.siteUrl}/assets/og-image.png` : '';
   const tags = [
     `<meta charset="utf-8">`,
     `<meta name="viewport" content="width=device-width, initial-scale=1">`,
@@ -45,7 +46,8 @@ export function renderPage({ path, title, description, body, scripts = [], noind
     `<meta name="description" content="${esc(description)}">`,
     noindex ? `<meta name="robots" content="noindex">` : '',
     canonical ? `<link rel="canonical" href="${canonical}">` : '',
-    `<meta name="theme-color" content="#3d35d6">`,
+    `<meta name="theme-color" content="#1e40af">`,
+    `<meta name="color-scheme" content="light dark">`,
     `<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">`,
     `<meta property="og:type" content="website">`,
     `<meta property="og:site_name" content="${site.name}">`,
@@ -53,7 +55,12 @@ export function renderPage({ path, title, description, body, scripts = [], noind
     `<meta property="og:title" content="${esc(title)}">`,
     `<meta property="og:description" content="${esc(description)}">`,
     canonical ? `<meta property="og:url" content="${canonical}">` : '',
-    `<meta name="twitter:card" content="summary">`,
+    ogImage ? `<meta property="og:image" content="${ogImage}">` : '',
+    ogImage ? `<meta property="og:image:width" content="1200">` : '',
+    ogImage ? `<meta property="og:image:height" content="630">` : '',
+    ogImage ? `<meta property="og:image:alt" content="Caply Tools: ferramentas online gratuitas, sem cadastro">` : '',
+    `<meta name="twitter:card" content="${ogImage ? 'summary_large_image' : 'summary'}">`,
+    ogImage ? `<meta name="twitter:image" content="${ogImage}">` : '',
     `<link rel="stylesheet" href="/assets/css/site.css">`,
   ].filter(Boolean).join('\n  ');
   const scriptTags = scripts.map((s) => `<script type="module" src="/assets/js/${s}"></script>`).join('\n');
@@ -65,7 +72,7 @@ export function renderPage({ path, title, description, body, scripts = [], noind
 <body>
 <a class="skip" href="#conteudo">Pular para o conteúdo</a>
 ${header(path)}
-<main id="conteudo">
+<main id="conteudo" tabindex="-1">
 ${body}
 </main>
 ${footer()}

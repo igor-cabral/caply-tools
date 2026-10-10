@@ -1,6 +1,6 @@
 import { encodeQR, drawQR, qrToSvg, maxBytes } from './qr.js';
 import { urlPayload, textPayload, wifiPayload } from './qr-content.js';
-import { $, copyText, debounce, downloadBlob, setError, setStatus } from './ui.js';
+import { $, copyText, flashButton, debounce, downloadBlob, setError, setStatus } from './ui.js';
 
 const form = $('qr-form');
 const canvas = $('qr-canvas');
@@ -56,6 +56,9 @@ function render() {
   try {
     const qr = encodeQR(p.value, { ecc: $('qr-ecc').value });
     drawQR(canvas, qr, 600);
+    canvas.setAttribute('aria-label', kind() === 'wifi'
+      ? `QR Code da rede Wi-Fi ${$('qr-ssid').value.trim()}`
+      : `QR Code com o conteúdo: ${p.value.length > 80 ? `${p.value.slice(0, 80)}…` : p.value}`);
     canvas.hidden = false;
     placeholder.hidden = true;
     current = { qr, payload: p.value };
@@ -89,6 +92,7 @@ function pngBlob() {
 }
 
 btnPng.addEventListener('click', async () => {
+  render();
   if (!current) return;
   const blob = await pngBlob();
   if (!blob) { setStatus(statusEl, 'Seu navegador não conseguiu gerar o PNG. Tente baixar em SVG.', 'err'); return; }
@@ -96,13 +100,16 @@ btnPng.addEventListener('click', async () => {
   setStatus(statusEl, 'PNG baixado.', 'ok');
 });
 btnSvg.addEventListener('click', () => {
+  render();
   if (!current) return;
   downloadBlob(new Blob([qrToSvg(current.qr)], { type: 'image/svg+xml' }), 'qrcode-caply.svg');
   setStatus(statusEl, 'SVG baixado.', 'ok');
 });
 btnCopy.addEventListener('click', async () => {
+  render();
   if (!current) return;
   const ok = await copyText(current.payload);
+  if (ok) flashButton(btnCopy);
   setStatus(statusEl, ok ? 'Conteúdo copiado.' : 'Não foi possível copiar. Selecione o texto e copie manualmente.', ok ? 'ok' : 'err');
 });
 

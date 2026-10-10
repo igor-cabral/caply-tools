@@ -28,6 +28,11 @@ async function resolveFile(urlPath) {
 
 createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
+  // Como a Cloudflare Pages: /qr-code redireciona (308) para /qr-code/
+  if (!url.pathname.endsWith('/') && !extname(url.pathname)) {
+    const asDir = await resolveFile(`${url.pathname}/`);
+    if (asDir) { res.writeHead(308, { Location: `${url.pathname}/${url.search}` }); res.end(); return; }
+  }
   let file = await resolveFile(url.pathname);
   let status = 200;
   if (!file) { file = join(root, '404.html'); status = 404; }

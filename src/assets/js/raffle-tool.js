@@ -1,5 +1,5 @@
 import { parseNames, drawWinners, validateRaffle, formatResults } from './raffle-lib.js';
-import { $, copyText, setError, setStatus } from './ui.js';
+import { $, copyText, flashButton, setError, setStatus } from './ui.js';
 
 const form = $('rf-form'), names = $('rf-names'), count = $('rf-winners'), dedupe = $('rf-dedupe');
 const errorEl = $('rf-error'), statusEl = $('rf-status'), counter = $('rf-count');
@@ -30,12 +30,16 @@ function draw() {
   meta.textContent = `${lastWinners.length} de ${n.length} participantes, sorteio feito em ${when}.`;
   placeholder.hidden = true;
   resultBox.hidden = false;
-  setStatus(statusEl, `Sorteio realizado: ${lastWinners.length} vencedor${lastWinners.length === 1 ? '' : 'es'}.`, 'ok');
+  const spoken = lastWinners.length <= 10 ? `: ${lastWinners.join(', ')}` : '';
+  setStatus(statusEl, `Sorteio realizado, ${lastWinners.length} vencedor${lastWinners.length === 1 ? '' : 'es'}${spoken}.`, 'ok');
 }
 
 form.addEventListener('submit', (e) => { e.preventDefault(); draw(); });
 $('rf-again').addEventListener('click', draw);
-names.addEventListener('input', () => { updateCounter(); setError(errorEl, '', [names, count]); });
+names.addEventListener('input', () => {
+  updateCounter(); setError(errorEl, '', [names, count]);
+  if (!resultBox.hidden) setStatus(statusEl, 'A lista mudou depois deste sorteio. Clique em Novo sorteio para atualizar o resultado.', 'warn');
+});
 dedupe.addEventListener('change', updateCounter);
 count.addEventListener('input', () => setError(errorEl, '', [names, count]));
 $('rf-clear').addEventListener('click', () => {
@@ -50,6 +54,7 @@ $('rf-clear').addEventListener('click', () => {
 });
 $('rf-copy').addEventListener('click', async () => {
   const ok = await copyText(formatResults(lastWinners));
+  if (ok) flashButton($('rf-copy'));
   setStatus(statusEl, ok ? 'Resultados copiados.' : 'Não foi possível copiar. Selecione o texto e copie manualmente.', ok ? 'ok' : 'err');
 });
 updateCounter();

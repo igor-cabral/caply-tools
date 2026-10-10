@@ -2,7 +2,7 @@ import { site, tools } from './config.mjs';
 
 export const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-const brandMark = `<svg class="brand-mark" viewBox="0 0 32 32" width="30" height="30" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="9" fill="currentColor"/><path d="M8 8h7v7H8zM17 17h7v7h-7z" fill="none" stroke="var(--on-brand)" stroke-width="2.4" stroke-linejoin="round"/><rect x="19.5" y="9.5" width="3.5" height="3.5" rx="1" fill="var(--accent)"/><rect x="9" y="19" width="3.5" height="3.5" rx="1" fill="var(--on-brand)"/></svg>`;
+const brandMark = `<svg class="brand-mark" viewBox="0 0 32 32" width="30" height="30" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="9" fill="currentColor"/><path d="M8 8h7v7H8zM17 17h7v7h-7z" fill="none" stroke="var(--on-brand)" stroke-width="2.4" stroke-linejoin="round"/><rect x="19.5" y="9.5" width="3.5" height="3.5" rx="1" fill="#06b6d4"/><rect x="9" y="19" width="3.5" height="3.5" rx="1" fill="var(--on-brand)"/></svg>`;
 
 function header(currentPath) {
   const links = tools
@@ -97,6 +97,7 @@ export function servicesNote() {
 export function toolHero(tool, lead) {
   return `<div class="page-head"><div class="wrap">
   <p class="crumbs"><a href="/">Início</a> / ${esc(tool.short)}</p>
+  <p class="chip chip-local">Executado 100% no seu navegador</p>
   <h1>${esc(tool.name)}</h1>
   <p class="lead">${lead}</p>
 </div></div>`;

@@ -19,9 +19,11 @@ npm run dev        # build + serve
 ## Qualidade
 ```bash
 npm run lint       # sintaxe de todos os .js/.mjs + regras (sem fetch/localStorage no frontend)
-npm test           # 52 testes (lógica das ferramentas, SEO, links, segredos no bundle, 404)
+npm test           # 56 testes (lógica das ferramentas, SEO, links, a11y estrutural, segredos no bundle, 404)
 npm run check      # lint + testes + build
-python3 tests/e2e/e2e.py   # opcional: ponta a ponta no Chromium (requer playwright, opencv-python, Pillow e servidor em :4173)
+npm run test:e2e   # opcional: sobe o servidor local e roda, no Chromium real, tests/e2e/e2e.py (fluxos das 4 ferramentas) e
+                   # tests/e2e/audit.py (contraste AA claro/escuro, foco por teclado, alvos de toque).
+                   # Requer: python3 com playwright (+ chromium), opencv-python e Pillow.
 ```
 Não existe typecheck: o projeto é JavaScript puro, sem TypeScript.
 
@@ -75,6 +77,13 @@ O site **não é uma SPA**: cada página tem seu próprio `index.html` (`/qr-cod
 
 **Não crie** `_redirects` com `/* /index.html 200`: isso transformaria todo endereço inválido em uma página 200 da home (soft 404, ruim para SEO) e não é necessário aqui. Um teste automatizado garante que esse arquivo não exista.
 
+## Design system
+Baseado no "Caply Precision System" (Google Stitch, `DESIGN.md`): canvas `#F8FAFC`, cards brancos com borda hairline, azul `#1E40AF` como cor primária, ciano `#0284C7`/`#06B6D4` e índigo `#4F46E5` como acentos, raios 8/16/24 px, sombras em 3 níveis, chips e badge "Executado 100% no seu navegador". Tema escuro automático (`prefers-color-scheme`). Tokens em `:root` no topo de `src/assets/css/site.css`.
+
+Desvios intencionais do Stitch, por acessibilidade (WCAG AA, medidos): textos de sucesso/erro/aviso usam `#047857`/`#B91C1C`/`#92400E` (os originais `#10B981`/`#EF4444` ficam só em detalhes gráficos); placeholder `#64748B` (em vez de `#94A3B8`); borda de campos `#7C8AA0` (≥ 3:1).
+
+**Fontes.** O Stitch usa Plus Jakarta Sans (títulos) e Inter (texto). Para respeitar a CSP e a privacidade, o site **não** carrega fontes do Google: a pilha CSS usa essas famílias se instaladas e cai para fontes do sistema. Para ativá-las para todos, auto-hospede: baixe os `.woff2` (licença OFL) para `src/assets/fonts/`, adicione `@font-face` no início de `site.css` (`font-display: swap`, `src: url(/assets/fonts/NOME.woff2) format("woff2")`) e rode o build. A CSP atual (`font-src 'self'`) já permite.
+
 ## Estrutura
 - `src/config.mjs`: nome, URL pública, URL do autor, catálogo de ferramentas.
 - `src/layout.mjs`: cabeçalho, rodapé, SEO/Open Graph. `src/pages/*.mjs`: conteúdo das páginas.
@@ -83,6 +92,8 @@ O site **não é uma SPA**: cada página tem seu próprio `index.html` (`/qr-cod
 - Nova ferramenta: entrada em `config.mjs` + página em `src/pages/` + registro em `scripts/build.mjs`.
 
 ## Pendências conhecidas
-- Imagem Open Graph (`og:image`) não criada: adicione quando houver arte.
+- A imagem Open Graph (`src/assets/og-image.png`) é gerada por `scripts/make-og-image.py` (Pillow) e usa fonte do sistema; substitua por arte própria quando quiser.
+- Fontes do design system (Plus Jakarta Sans/Inter) ainda não auto-hospedadas (ver acima).
+- Conversor: em iOS/Safari o limite de área do canvas é menor que os 40 MP aceitos; imagens enormes podem falhar com mensagem de erro (não testado em iOS real).
 - Rodapé e seção de serviços linkam só a raiz `https://igorcabral.dev.br`; atualize quando existirem páginas de portfólio/serviços/contato verificadas.
 - Assistente de IA e links curtos próprios: ver `docs/AVALIACAO.md`.

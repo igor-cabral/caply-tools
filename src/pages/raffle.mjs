@@ -29,7 +29,7 @@ ${toolHero(t, 'Cole a lista de participantes, escolha quantos vencedores você q
       <h2 id="rf-res-t" class="panel-title">Resultado</h2>
       <p class="placeholder" id="rf-placeholder">O resultado do sorteio aparece aqui.</p>
       <div id="rf-result" hidden>
-        <ol class="winners" id="rf-list"></ol>
+        <ol class="winners" id="rf-list" role="list"></ol>
         <p class="meta" id="rf-meta"></p>
         <div class="actions">
           <button type="button" class="btn" id="rf-again">Novo sorteio</button>

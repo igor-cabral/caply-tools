@@ -38,7 +38,7 @@ with sync_playwright() as p:
     page.fill('#demo-input', 'https://exemplo.com.br/teste')
     page.wait_for_timeout(300)
     check('home: link do gerador carrega valor', 'v=https%3A%2F%2Fexemplo.com.br%2Fteste' in page.get_attribute('#demo-open', 'href'))
-    page.screenshot(path='/tmp/shot-home-desktop.png', full_page=True, caret='initial', animations='allow')
+    page.screenshot(path=os.path.join(TMP, 'shot-home-desktop.png'), full_page=True, caret='initial', animations='allow')
 
     # ---------- QR Code ----------
     page.goto(BASE + '/qr-code/')
@@ -76,7 +76,7 @@ with sync_playwright() as p:
     check('qr: Wi-Fi decodifica com escapes', decode_png(f) == 'WIFI:T:WPA;S:Casa\\;Wi\\:Fi;P:senha-segura-1;;', decode_png(f))
     page.select_option('#qr-security', 'nopass')
     check('qr: sem senha oculta o campo', page.locator('#qr-pass-field').is_hidden())
-    page.screenshot(path='/tmp/shot-qr-desktop.png', full_page=True, caret='initial', animations='allow')
+    page.screenshot(path=os.path.join(TMP, 'shot-qr-desktop.png'), full_page=True, caret='initial', animations='allow')
     page.focus('input[name=kind][value=wifi]'); page.keyboard.press('ArrowLeft')
     check('qr: radios operáveis por teclado', page.locator('input[name=kind][value=text]').is_checked())
     page.goto(BASE + '/qr-code/?t=url&v=' + 'https%3A%2F%2Fwa.me%2F5548999999999')
@@ -107,7 +107,7 @@ with sync_playwright() as p:
     check('wl: botão aplica o 55', page.input_value('#wl-phone') == '+5548999999999' and page.input_value('#wl-out').startswith('https://wa.me/5548999999999') and page.locator('#wl-fix').is_hidden())
     page.fill('#wl-phone', '+5548999999999'); page.fill('#wl-msg', '')
     check('wl: sem mensagem não tem ?text', page.input_value('#wl-out') == 'https://wa.me/5548999999999')
-    page.screenshot(path='/tmp/shot-whatslink-desktop.png', full_page=True, caret='initial', animations='allow')
+    page.screenshot(path=os.path.join(TMP, 'shot-whatslink-desktop.png'), full_page=True, caret='initial', animations='allow')
     page.click('#wl-qr'); page.wait_for_selector('#qr-canvas:not([hidden])')
     check('wl: ponte para o QR Code', page.url.startswith(BASE + '/qr-code/') and page.input_value('#qr-url') == 'https://wa.me/5548999999999')
 
@@ -139,7 +139,7 @@ with sync_playwright() as p:
     page.click('#rf-clear')
     check('rf: limpar lista', page.input_value('#rf-names') == '' and page.locator('#rf-result').is_hidden())
     page.fill('#rf-names', 'Ana\nBia\nCaio\nDora'); page.fill('#rf-winners', '2'); page.click('#rf-draw')
-    page.screenshot(path='/tmp/shot-raffle-desktop.png', full_page=True, caret='initial', animations='allow')
+    page.screenshot(path=os.path.join(TMP, 'shot-raffle-desktop.png'), full_page=True, caret='initial', animations='allow')
 
     # ---------- Conversor de imagens ----------
     page.goto(BASE + '/conversor-de-imagens/')
@@ -176,7 +176,7 @@ with sync_playwright() as p:
     fp = os.path.join(TMP, 'out.png'); d.value.save_as(fp)
     ip = Image.open(fp)
     check('im: PNG preserva transparência', ip.format == 'PNG' and ip.mode == 'RGBA' and ip.getpixel((10, 180))[3] == 0, f'{ip.mode}')
-    page.screenshot(path='/tmp/shot-image-desktop.png', full_page=True, caret='initial', animations='allow')
+    page.screenshot(path=os.path.join(TMP, 'shot-image-desktop.png'), full_page=True, caret='initial', animations='allow')
     bad = os.path.join(TMP, 'falso.png'); open(bad, 'w').write('isto não é uma imagem')
     page.set_input_files('#im-file', bad); page.wait_for_timeout(300)
     check('im: rejeita arquivo falso mesmo com .png', 'não suportado' in page.inner_text('#im-error') and page.locator('#im-source').is_hidden())
@@ -222,7 +222,7 @@ with sync_playwright() as p:
         c2.close()
     mob = b.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=2); pg = mob.new_page()
     for name, pth in [('home', '/'), ('qr', '/qr-code/'), ('image', '/conversor-de-imagens/')]:
-        pg.goto(BASE + pth); pg.wait_for_timeout(200); pg.screenshot(path=f'/tmp/shot-{name}-mobile.png', full_page=True, caret='initial', animations='allow')
+        pg.goto(BASE + pth); pg.wait_for_timeout(200); pg.screenshot(path=os.path.join(TMP, f'shot-{name}-mobile.png'), full_page=True, caret='initial', animations='allow')
     b.close()
 
 fails = [n for n, ok in results if not ok]

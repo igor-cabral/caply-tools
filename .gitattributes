@@ -1,0 +1,5 @@
+# Mantém LF em todos os sistemas (evita CRLF do Windows nos scripts e testes)
+* text=auto eol=lf
+*.png binary
+*.ico binary
+*.woff2 binary

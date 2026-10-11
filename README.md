@@ -1,6 +1,6 @@
 # Caply Tools
 
-Ferramentas online gratuitas, sem cadastro, que processam tudo **no navegador**: Gerador de QR Code (link, texto, Wi-Fi; PNG/SVG), WhatsLink (links `wa.me`), Sorteador e Conversor de imagens (PNG, JPEG, WebP).
+Ferramentas online gratuitas, sem cadastro, que processam tudo **no navegador**: Gerador de QR Code (link, texto, Wi-Fi; PNG/SVG), WhatsLink (links `wa.me`), Sorteador (nomes, números, equipes e grupos, ordem, chaves e confrontos) e Conversor de imagens (PNG, JPEG, WebP).
 
 URL de produção: **https://tools.igorcabral.dev.br**
 
@@ -19,7 +19,7 @@ npm run dev        # build + serve
 ## Qualidade
 ```bash
 npm run lint       # sintaxe de todos os .js/.mjs + regras (sem fetch/localStorage no frontend)
-npm test           # 60 testes (lógica das ferramentas, SEO, links, a11y estrutural, segredos no bundle, 404)
+npm test           # 87 testes (lógica das ferramentas, SEO, links, a11y estrutural, segredos no bundle, 404)
 npm run check      # lint + testes + build
 npm run test:e2e   # opcional: sobe o servidor local e roda, no Chromium real, tests/e2e/e2e.py (fluxos das 4 ferramentas) e
                    # tests/e2e/audit.py (contraste AA claro/escuro, foco por teclado, alvos de toque).
@@ -73,7 +73,7 @@ npx wrangler pages deploy dist --project-name caply-tools
 - Confirme os cabeçalhos de segurança (`curl -I https://tools.igorcabral.dev.br/qr-code/`): `Content-Security-Policy` etc. vêm de `dist/_headers`, que a Cloudflare Pages aplica.
 
 ## Roteamento e 404 (sem fallback de SPA)
-O site **não é uma SPA**: cada página tem seu próprio `index.html` (`/qr-code/`, `/whatslink/`, `/sorteador/`, `/conversor-de-imagens/`, `/privacidade/`), então recarregar qualquer página interna funciona sem regra extra. A Cloudflare Pages serve `/qr-code` redirecionando para `/qr-code/` e usa `404.html` (com status 404) para endereços inexistentes.
+O site **não é uma SPA**: cada página tem seu próprio `index.html` (`/qr-code/`, `/whatslink/`, `/sorteador/` e suas modalidades `/sorteador/numeros/`, `/equipes/`, `/ordem/`, `/chaves/`, `/conversor-de-imagens/`, `/privacidade/`), então recarregar qualquer página interna funciona sem regra extra. A Cloudflare Pages serve `/qr-code` redirecionando para `/qr-code/` e usa `404.html` (com status 404) para endereços inexistentes.
 
 **Não crie** `_redirects` com `/* /index.html 200`: isso transformaria todo endereço inválido em uma página 200 da home (soft 404, ruim para SEO) e não é necessário aqui. Um teste automatizado garante que esse arquivo não exista.
 
@@ -97,7 +97,7 @@ Ativos de marca do autor: `src/assets/img/igor-cabral-white.png` (logotipo branc
 - `src/config.mjs`: nome, URL pública, URL do autor, catálogo de ferramentas.
 - `src/layout.mjs`: cabeçalho, rodapé, SEO/Open Graph. `src/pages/*.mjs`: conteúdo das páginas.
 - `src/assets/`: CSS e JS (`*-lib.js` sem DOM, testáveis; `*-tool.js` ligam a interface; `qr.js` é o codificador de QR Code próprio).
-- `scripts/`: build, servidor local, lint. `tests/`: testes. `docs/AVALIACAO.md`: assistente de IA e links curtos (não implementados).
+- `scripts/`: build, servidor local, lint. `tests/`: testes. `docs/AVALIACAO.md`: assistente de IA e links curtos (não implementados). `docs/PLANO-EXPANSAO.md`: plano de expansão (sorteador, áudio, Caply IA, catálogo) e decisões técnicas.
 - Nova ferramenta: entrada em `config.mjs` + página em `src/pages/` + registro em `scripts/build.mjs`.
 
 ## Pendências conhecidas
@@ -105,3 +105,9 @@ Ativos de marca do autor: `src/assets/img/igor-cabral-white.png` (logotipo branc
 - Conversor: em iOS/Safari o limite de área do canvas é menor que os 40 MP aceitos; imagens enormes podem falhar com mensagem de erro (não testado em iOS real).
 - Rodapé, cabeçalho e seção do criador linkam só a raiz `https://igorcabral.dev.br`; atualize quando existirem páginas de portfólio/serviços/contato verificadas.
 - Assistente de IA e links curtos próprios: ver `docs/AVALIACAO.md`.
+
+## Sorteador (modalidades)
+Uma só interface, uma página por modalidade (cada uma com conteúdo próprio para SEO). A lógica é pura e testada, separada da interface:
+`raffle-lib.js` (nomes, números, ordem, exclusões), `raffle-groups.js` (equipes/grupos e restrições), `raffle-bracket.js` (confrontos e chaves), `raffle-export.js` (copiar, CSV), `raffle-modes.js` (dados das modalidades, usados pelo build e pelo navegador).
+Aleatoriedade: `crypto.getRandomValues` com amostragem por rejeição (sem viés de módulo), Fisher–Yates e, para números sem repetição, o algoritmo de Floyd. A ferramenta **não** é certificada nem auditável e não se anuncia como tal.
+Limites: 10.000 participantes, nomes de até 120 caracteres, 10.000 resultados por sorteio, intervalo de até 2³² números, chave de até 256 participantes.

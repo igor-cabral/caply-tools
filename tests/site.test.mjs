@@ -18,7 +18,7 @@ before(async () => {
 const htmlOf = (p) => readFileSync(join(out, p.path === '/' ? 'index.html' : (p.file || `${p.path.slice(1)}index.html`)), 'utf8');
 
 test('todas as páginas existem e têm estrutura semântica básica', () => {
-  assert.equal(pages.length, 7);
+  assert.equal(pages.length, 11);
   for (const p of pages) {
     const html = htmlOf(p);
     assert.match(html, /<html lang="pt-BR">/);
@@ -111,7 +111,7 @@ test('padrão de produção: canonical, og:url, sitemap e robots usam tools.igor
     assert.ok(html.includes(`<meta property="og:url" content="${PROD}${path}">`), `og:url ${path}`);
   }
   const sm = readFileSync(join(dir2, 'sitemap.xml'), 'utf8');
-  assert.equal((sm.match(/<loc>/g) || []).length, 6);
+  assert.equal((sm.match(/<loc>/g) || []).length, 10);
   assert.ok(sm.includes(`<loc>${PROD}/</loc>`) && !sm.includes('404') && !sm.includes('localhost'));
   assert.match(readFileSync(join(dir2, 'robots.txt'), 'utf8'), new RegExp(`Sitemap: ${PROD}/sitemap\\.xml`));
   const home = readFileSync(join(dir2, 'index.html'), 'utf8');
@@ -161,7 +161,7 @@ test('com SITE_URL: canonical, og:url e sitemap sem a página 404', () => {
   const sm = readFileSync(join(dir, 'sitemap.xml'), 'utf8');
   assert.match(sm, /<loc>https:\/\/exemplo\.test\/qr-code\/<\/loc>/);
   assert.ok(!sm.includes('404'));
-  assert.equal((sm.match(/<loc>/g) || []).length, 6);
+  assert.equal((sm.match(/<loc>/g) || []).length, 10);
   assert.match(readFileSync(join(dir, 'qr-code/index.html'), 'utf8'), /rel="canonical" href="https:\/\/exemplo\.test\/qr-code\/"/);
   assert.match(readFileSync(join(dir, 'robots.txt'), 'utf8'), /Sitemap: https:\/\/exemplo\.test\/sitemap\.xml/);
 });

@@ -98,9 +98,9 @@ export function servicesNote() {
 </aside>`;
 }
 
-export function toolHero(tool, lead) {
+export function toolHero(tool, lead, crumbs) {
   return `<div class="page-head"><div class="wrap">
-  <p class="crumbs"><a href="/">Início</a> / ${esc(tool.short)}</p>
+  <p class="crumbs">${crumbs || `<a href="/">Início</a> / ${esc(tool.short)}`}</p>
   <p class="chip chip-local">Executado 100% no seu navegador</p>
   <h1>${esc(tool.name)}${dot}</h1>
   <p class="lead">${lead}</p>

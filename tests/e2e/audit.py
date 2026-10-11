@@ -4,7 +4,7 @@ import sys
 from playwright.sync_api import sync_playwright
 
 BASE = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:4173'
-PATHS = ['/', '/qr-code/', '/whatslink/', '/sorteador/', '/conversor-de-imagens/', '/privacidade/', '/nao-existe']
+PATHS = ['/', '/qr-code/', '/whatslink/', '/sorteador/', '/sorteador/numeros/', '/sorteador/equipes/', '/sorteador/ordem/', '/sorteador/chaves/', '/conversor-de-imagens/', '/privacidade/', '/nao-existe']
 
 CONTRAST_JS = r"""
 () => {
@@ -43,7 +43,9 @@ with sync_playwright() as p:
         for path in PATHS:
             pg.goto(BASE + path)
             if path == '/qr-code/': pg.fill('#qr-url', 'x'); pg.fill('#qr-url', 'palavra solta'); pg.wait_for_timeout(300)
-            if path == '/sorteador/': pg.fill('#rf-names', 'A\nB'); pg.fill('#rf-winners', '1'); pg.click('#rf-draw')
+            if path.startswith('/sorteador/'):
+                if pg.locator('#rf-names').is_visible(): pg.fill('#rf-names', 'Ana\nBruno\nCarla\nDiego\nElisa')
+                pg.click('#rf-draw')
             bad = pg.evaluate(CONTRAST_JS)
             check(f'contraste AA ({scheme}) {path}', not bad, '; '.join(bad[:5]))
         ctx.close()

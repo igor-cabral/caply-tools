@@ -327,3 +327,52 @@ details > p { margin: 0 0 1.1rem; color: var(--text-2); }
   .nav { gap: 0 1rem; }
   .nav a { font-size: .92rem; }
 }
+
+/* ---------- Sorteador: modalidades e resultados ---------- */
+.mode-help { color: var(--text-2); margin: -.4rem 0 1.5rem; max-width: 40rem; }
+.mode-seg span { min-width: 0; }
+.narrow-field { max-width: 14rem; }
+.num-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 1rem; }
+@media (max-width: 520px) { .num-grid { grid-template-columns: 1fr; } }
+.print-head { display: none; }
+
+/* cartões brancos dentro do painel azul */
+.result :is(.team, .game) { background: #fff; color: var(--ink); border-radius: 2px; }
+.winners.numbers li { font-variant-numeric: tabular-nums; }
+.teams { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr)); }
+.team { padding: 1rem 1.1rem; }
+.team h3 { display: flex; justify-content: space-between; align-items: baseline; gap: .75rem; margin: 0 0 .6rem; font-size: 1.35rem; }
+.team .count { font-size: .85rem; font-weight: 600; letter-spacing: 0; color: #4b505c; }
+.team ul { list-style: none; margin: 0; padding: 0; }
+.team li { padding: .4rem 0; border-top: 1px solid rgba(10, 10, 10, .16); font-weight: 600; overflow-wrap: anywhere; }
+.pairs, .games { list-style: none; margin: 0; padding: 0; display: grid; gap: .6rem; }
+.game { display: grid; grid-template-columns: auto minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: .25rem .75rem; padding: .7rem .9rem; }
+.pairs .game.bye { grid-template-columns: auto minmax(0, 1fr); }
+.game .gno { font-size: .78rem; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; color: #4b505c; }
+.game .slot { font-weight: 800; letter-spacing: -0.02em; overflow-wrap: anywhere; }
+.game .slot.pending { font-weight: 500; letter-spacing: 0; color: #4b505c; }
+.game .vs { font-size: .85rem; font-weight: 700; color: #4b505c; text-align: center; }
+.bracket { display: flex; gap: 1.1rem; overflow-x: auto; padding-bottom: .9rem; scroll-snap-type: x proximity; }
+.bracket:focus-visible { outline-offset: 2px; }
+.tool.tool-wide { grid-template-columns: 1fr; }
+.tool-wide .round { flex: 1 1 14rem; max-width: 20rem; }
+.round { flex: 0 0 min(17rem, 78vw); scroll-snap-align: start; }
+.round h3 { font-size: 1.1rem; margin: 0 0 .6rem; padding-bottom: .4rem; border-bottom: 2px solid rgba(255, 255, 255, .55); }
+.bracket .game { grid-template-columns: 1fr; gap: .1rem; }
+.bracket .game .vs { text-align: left; }
+.mode-links a strong { display: block; }
+
+/* ---------- Impressão: só o resultado ---------- */
+@media print {
+  .skip, .site-header, .site-footer, .page-head, .tool > form, .prose, .maker-note, .result .actions, .result .status, .result .note-box, .result .panel-title, .result .placeholder { display: none !important; }
+  body, .tool, .panel.result { background: #fff !important; color: #000 !important; }
+  .tool { display: block; margin: 0; }
+  .panel.result { position: static; border: 0; padding: 0; }
+  .print-head { display: block; font-weight: 700; margin: 0 0 1rem; font-size: 12pt; }
+  .result .meta { color: #000; }
+  .winners li, .team, .game { background: #fff !important; color: #000 !important; border: 1px solid #000; break-inside: avoid; }
+  .winners li::before { background: #fff; color: #000; border: 1px solid #000; }
+  .bracket { overflow: visible; flex-wrap: wrap; }
+  .round h3 { border-bottom-color: #000; }
+  .team .count, .game .gno, .game .vs, .game .slot.pending { color: #000 !important; }
+}

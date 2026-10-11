@@ -22,7 +22,7 @@ export function build({ outDir = join(root, 'dist'), log = true } = {}) {
   mkdirSync(outDir, { recursive: true });
   cpSync(join(root, 'src', 'assets'), join(outDir, 'assets'), { recursive: true });
 
-  const pages = [home, qr, whatslink, raffle, image, privacy, notFound].map((fn) => fn());
+  const pages = [home, qr, whatslink, raffle, image, privacy, notFound].flatMap((fn) => [].concat(fn()));
   for (const p of pages) {
     const file = p.file || `${p.path.replace(/^\/|\/$/g, '')}/index.html`.replace(/^\//, '');
     const target = join(outDir, p.path === '/' ? 'index.html' : file);

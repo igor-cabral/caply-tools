@@ -123,6 +123,7 @@ with sync_playwright() as p:
     # ---------- Sorteador ----------
     page.goto(BASE + '/sorteador/')
     page.fill('#rf-names', 'Ana\n\n  Bruno \nCarla\nana\nDiego\nElisa\n')
+    page.wait_for_timeout(300)
     check('rf: contador ignora vazias e repetidas', page.inner_text('#rf-count').startswith('5 participantes') and '1 repetido' in page.inner_text('#rf-count'), page.inner_text('#rf-count'))
     page.fill('#rf-winners', '9'); page.click('#rf-draw')
     check('rf: erro quando vencedores > participantes', 'apenas 5' in page.inner_text('#rf-error'))
@@ -131,7 +132,7 @@ with sync_playwright() as p:
     check('rf: 3 vencedores únicos da lista', len(w) == 3 and len(set(w)) == 3 and set(w) <= {'Ana', 'Bruno', 'Carla', 'Diego', 'Elisa'}, str(w))
     check('rf: status falado inclui os nomes', all(n in page.inner_text('#rf-status') for n in w), page.inner_text('#rf-status'))
     page.fill('#rf-names', 'Ana\nBruno\nCarla\nDiego\nElisa\nFabio')
-    check('rf: avisa que a lista mudou depois do sorteio', 'mudou' in page.inner_text('#rf-status'))
+    check('rf: avisa que os dados mudaram depois do sorteio', 'mudaram' in page.inner_text('#rf-status'))
     page.click('#rf-again')
     seen = set()
     for _ in range(25):
@@ -149,6 +150,97 @@ with sync_playwright() as p:
     check('rf: limpar lista', page.input_value('#rf-names') == '' and page.locator('#rf-result').is_hidden())
     page.fill('#rf-names', 'Ana\nBia\nCaio\nDora'); page.fill('#rf-winners', '2'); page.click('#rf-draw')
     page.screenshot(path=os.path.join(TMP, 'shot-raffle-desktop.png'), full_page=True, caret='initial', animations='allow')
+
+    # ---------- Sorteador: novas modalidades ----------
+    def pick(mode):
+        page.check(f'input[name=mode][value={mode}]')
+    page.goto(BASE + '/sorteador/')
+    page.fill('#rf-names', 'Ana\nBruno\nCarla')
+    pick('numeros')
+    check('rf: trocar de modalidade atualiza a URL e o título', page.url.endswith('/sorteador/numeros/') and 'números' in page.title())
+    check('rf: modalidade de números esconde a lista e mostra o intervalo', page.locator('#rf-names').is_hidden() and page.locator('#rf-min').is_visible())
+    pick('nomes')
+    check('rf: a lista digitada é preservada ao trocar de modalidade', page.input_value('#rf-names') == 'Ana\nBruno\nCarla')
+    page.goto(BASE + '/sorteador/numeros/')
+    check('rf: página de números abre já na modalidade certa', page.locator('input[name=mode][value=numeros]').is_checked() and 'Sorteador de números' in page.inner_text('h1'))
+    page.fill('#rf-min', '1'); page.fill('#rf-max', '10'); page.fill('#rf-ncount', '10'); page.click('#rf-draw')
+    nums = [int(x) for x in page.locator('#rf-list li').all_inner_texts()]
+    check('rf-num: 10 números únicos de 1 a 10', sorted(nums) == list(range(1, 11)), str(nums))
+    page.fill('#rf-ncount', '11'); page.click('#rf-draw')
+    check('rf-num: erro claro quando pede mais que o intervalo', 'apenas 10' in page.inner_text('#rf-error'))
+    page.check('#rf-nrepeat'); page.check('#rf-nsort'); page.click('#rf-draw')
+    nums = [int(x) for x in page.locator('#rf-list li').all_inner_texts()]
+    check('rf-num: com repetição e ordem crescente', len(nums) == 11 and nums == sorted(nums), str(nums))
+    page.fill('#rf-min', '5'); page.fill('#rf-max', '1'); page.click('#rf-draw')
+    check('rf-num: min > max é recusado', 'menor número' in page.inner_text('#rf-error'))
+    page.fill('#rf-min', ''); page.click('#rf-draw')
+    check('rf-num: campo vazio é recusado', page.inner_text('#rf-error') != '')
+    page.fill('#rf-min', '-3'); page.fill('#rf-max', '3'); page.fill('#rf-ncount', '7'); page.uncheck('#rf-nrepeat'); page.click('#rf-draw')
+    check('rf-num: intervalo com negativos', sorted(int(x) for x in page.locator('#rf-list li').all_inner_texts()) == list(range(-3, 4)))
+
+    page.goto(BASE + '/sorteador/equipes/')
+    people = ['Ana', 'Bruno', 'Carla', 'Diego', 'Elisa', 'Fabio', 'Gabi', 'Hugo', 'Iara', 'Joao']
+    page.fill('#rf-names', '\n'.join(people)); page.check('input[name=tmode][value=perTeam]'); page.fill('#rf-tvalue', '4')
+    check('rf-eq: rótulo muda conforme o modo', 'pessoas por' in page.inner_text('#rf-tvalue-label'))
+    page.click('#rf-draw')
+    sizes = sorted(int(t.split()[0]) for t in page.locator('.team .count').all_inner_texts())
+    check('rf-eq: 10 pessoas, 4 por equipe -> 3 equipes de tamanhos 4/3/3', sizes == [3, 3, 4], str(sizes))
+    allp = sorted(page.locator('.team li').all_inner_texts()); check('rf-eq: todos aparecem exatamente uma vez', allp == sorted(people))
+    page.check('input[name=tmode][value=teams]'); page.fill('#rf-tvalue', '3')
+    check('rf-eq: regras ficam recolhidas até o usuário abrir', page.locator('#rf-sep').is_hidden())
+    page.click('summary:has-text("não podem ficar juntas")'); page.fill('#rf-sep', 'Ana, Bruno\nCarla, Diego, Elisa')
+    ok = True
+    for _ in range(30):
+        page.click('#rf-again')
+        teams = [t.all_inner_texts() for t in page.locator('.team ul').all()]
+        for t in teams:
+            if ('Ana' in t and 'Bruno' in t) or sum(x in t for x in ('Carla', 'Diego', 'Elisa')) > 1: ok = False
+    check('rf-eq: regras de separação sempre cumpridas (30 sorteios)', ok)
+    page.fill('#rf-sep', 'Ana, Bruno, Carla, Diego'); page.fill('#rf-tvalue', '3'); page.click('#rf-draw')
+    check('rf-eq: regra impossível é explicada', '4 pessoas' in page.inner_text('#rf-error'), page.inner_text('#rf-error'))
+    page.fill('#rf-sep', 'Ana, Zeca'); page.click('#rf-draw')
+    check('rf-eq: avisa sobre nome desconhecido nas regras', 'Zeca' in page.inner_text('#rf-status'))
+    page.check('input[name=tlabel][value=Grupo]'); page.fill('#rf-sep', ''); page.click('#rf-draw')
+    check('rf-eq: rótulo Grupo', page.locator('.team h3').first.inner_text().startswith('Grupo 1'))
+    page.fill('#rf-tvalue', '11'); page.click('#rf-draw')
+    check('rf-eq: mais equipes que pessoas é recusado', 'apenas 10' in page.inner_text('#rf-error'))
+
+    page.goto(BASE + '/sorteador/ordem/')
+    page.fill('#rf-names', '\n'.join(people)); page.click('summary:has-text("Excluir participantes")'); page.fill('#rf-exclude', 'bruno\nJoao'); page.click('#rf-draw')
+    got = page.locator('#rf-list li').all_inner_texts()
+    check('rf-ordem: permutação sem os excluídos', sorted(got) == sorted(set(people) - {'Bruno', 'Joao'}), str(got))
+    page.wait_for_timeout(300)
+    check('rf-ordem: contador mostra excluídos', '2 excluídos' in page.inner_text('#rf-count'), page.inner_text('#rf-count'))
+
+    page.goto(BASE + '/sorteador/chaves/')
+    page.fill('#rf-names', '\n'.join(people[:5])); page.click('#rf-draw')
+    rounds = page.locator('.round h3').all_inner_texts()
+    check('rf-chave: 5 participantes -> quartas, semifinais e final', rounds == ['Quartas de final', 'Semifinais', 'Final'], str(rounds))
+    check('rf-chave: 3 folgas na 1ª rodada', page.locator('.round').first.locator('.game', has_text='avança direto').count() == 3)
+    check('rf-chave: região rolável acessível', page.get_attribute('.bracket', 'role') == 'region' and page.get_attribute('.bracket', 'tabindex') == '0')
+    page.check('input[name=bmode][value=pairs]'); page.click('#rf-draw')
+    check('rf-chave: duplas com número ímpar deixam 1 de folga', page.locator('.pairs .game').count() == 3 and page.locator('.pairs .bye').count() == 1)
+    page.fill('#rf-names', 'Só um'); page.click('#rf-draw')
+    check('rf-chave: 1 participante é recusado', 'pelo menos 2' in page.inner_text('#rf-error'))
+
+    # segurança e exportação
+    page.goto(BASE + '/sorteador/')
+    page.fill('#rf-names', '<img src=x onerror=alert(1)>\n=1+1\n"aspas";ponto'); page.fill('#rf-winners', '3'); page.click('#rf-draw')
+    check('rf-seg: nomes com HTML viram texto (sem XSS)', page.locator('#rf-output img').count() == 0 and '<img' in ' '.join(page.locator('#rf-list li').all_inner_texts()))
+    with page.expect_download() as d:
+        page.click('#rf-csv')
+    fcsv = os.path.join(TMP, 'sorteio.csv'); d.value.save_as(fcsv); raw = open(fcsv, 'rb').read()
+    check('rf-csv: BOM UTF-8, cabeçalho e fórmula neutralizada', raw.startswith(b'\xef\xbb\xbf') and b'posi' in raw and b"'=1+1" in raw and d.value.suggested_filename == 'sorteio-caply.csv', raw[:120].decode('utf-8', 'replace'))
+    page.emulate_media(media='print')
+    check('rf-print: só o resultado aparece na impressão', page.locator('#rf-form').is_hidden() and page.locator('.site-header').is_hidden() and page.locator('#rf-print-head').is_visible() and page.locator('#rf-list').is_visible())
+    page.emulate_media(media='screen')
+    # simula uma colagem (1 evento); page.fill insere linha a linha no Chromium e é quadrático mesmo sem JS
+    page.evaluate("() => { const t = document.getElementById('rf-names'); t.value = Array.from({length: 5000}, (_, i) => 'Pessoa ' + i).join('\\n'); t.dispatchEvent(new Event('input', { bubbles: true })); }")
+    page.fill('#rf-winners', '50')
+    import time as _t; t0 = _t.time(); page.click('#rf-draw'); page.wait_for_selector('#rf-list li'); dt = _t.time() - t0
+    check('rf-perf: 5000 nomes sorteados rapidamente', page.locator('#rf-list li').count() == 50 and dt < 3, f'{dt:.2f}s')
+    page.fill('#rf-names', 'x' * 200); page.click('#rf-draw')
+    check('rf-limite: nome gigante é recusado com explicação', 'mais de 120' in page.inner_text('#rf-error'))
 
     # ---------- Conversor de imagens ----------
     page.goto(BASE + '/conversor-de-imagens/')

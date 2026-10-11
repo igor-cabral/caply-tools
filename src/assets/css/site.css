@@ -58,6 +58,11 @@ h1, h2, h3 { margin: 0 0 .5em; font-weight: 800; letter-spacing: -0.04em; line-h
 h1 { font-size: clamp(2.75rem, 1rem + 8vw, 6.75rem); line-height: .92; letter-spacing: -0.055em; }
 h2 { font-size: clamp(2.1rem, 1rem + 4.2vw, 4.25rem); line-height: .96; letter-spacing: -0.05em; }
 h3 { font-size: 1.35rem; line-height: 1.15; letter-spacing: -0.03em; }
+/* O tracking negativo também encolhe o espaço entre palavras ("Sorteadorde"). Compensamos por nível,
+   mantendo as letras apertadas da identidade. O logotipo (.brand) não é alterado. */
+h1 { word-spacing: .1em; }
+h2 { word-spacing: .08em; }
+h3, .panel-title, .demo-title, .drop-title, .winners li, .plain-list a strong, .prose-block ol li::before { word-spacing: .06em; }
 .dot { color: var(--accent); }
 p { margin: 0 0 1em; }
 code { font-family: var(--mono); font-size: .88em; background: var(--mist); padding: .1em .4em; border-radius: 2px; }
@@ -174,6 +179,8 @@ input[type="range"] { width: 100%; accent-color: var(--blue); min-height: 36px; 
 .hero { padding: clamp(2.5rem, 6vw, 5rem) 0 clamp(3rem, 7vw, 6rem); }
 .hero-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: clamp(2.5rem, 5vw, 5rem); align-items: end; }
 .hero h1 { margin: 1.4rem 0 1.5rem; font-size: clamp(2.9rem, .8rem + 8.4vw, 6.9rem); }
+/* Em duas colunas (900–1279px) a maior palavra ultrapassava a coluna; esta fórmula acompanha a largura dela. */
+@media (min-width: 900px) and (max-width: 1279px) { .hero h1 { font-size: calc(8.4vw - 2px); } }
 .hero-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin: 2rem 0 0; }
 .demo { padding: clamp(1.25rem, 3vw, 2rem); border-radius: var(--r); }
 .demo-title { font-size: 1.5rem; margin: 0 0 1.1rem; letter-spacing: -0.03em; }
@@ -354,8 +361,10 @@ details > p { margin: 0 0 1.1rem; color: var(--text-2); }
 .game .vs { font-size: .85rem; font-weight: 700; color: #4b505c; text-align: center; }
 .bracket { display: flex; gap: 1.1rem; overflow-x: auto; padding-bottom: .9rem; scroll-snap-type: x proximity; }
 .bracket:focus-visible { outline-offset: 2px; }
-.tool.tool-wide { grid-template-columns: 1fr; }
-.tool-wide .round { flex: 1 1 14rem; max-width: 20rem; }
+.tool.tool-wide { grid-template-columns: minmax(0, 1fr); }
+.tool > * { min-width: 0; }
+.bracket { max-width: 100%; }
+.tool-wide .round { flex: 1 0 min(14rem, 78vw); max-width: 20rem; } /* não encolhe: a região rola */
 .round { flex: 0 0 min(17rem, 78vw); scroll-snap-align: start; }
 .round h3 { font-size: 1.1rem; margin: 0 0 .6rem; padding-bottom: .4rem; border-bottom: 2px solid rgba(255, 255, 255, .55); }
 .bracket .game { grid-template-columns: 1fr; gap: .1rem; }

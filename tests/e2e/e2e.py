@@ -312,17 +312,36 @@ with sync_playwright() as p:
 
     check('sem erros/avisos de console nem violações de CSP', not errors, '; '.join(errors)[:600])
 
-    # ---------- Responsividade ----------
-    paths = ['/', '/qr-code/', '/whatslink/', '/sorteador/', '/conversor-de-imagens/', '/privacidade/']
-    for w in (360, 768):
+    # ---------- Responsividade (7 larguras, todas as páginas, com e sem resultado na tela) ----------
+    paths = ['/', '/qr-code/', '/whatslink/', '/sorteador/', '/sorteador/numeros/', '/sorteador/equipes/', '/sorteador/ordem/', '/sorteador/chaves/', '/conversor-de-imagens/', '/privacidade/', '/nao-existe']
+    NAMES20 = '\n'.join(f'Participante com nome comprido número {i}' for i in range(1, 21))
+    for w in (320, 360, 390, 768, 1024, 1280, 1920):
         c2 = b.new_context(viewport={'width': w, 'height': 800}); pg = c2.new_page()
+        over = []; h1over = []
         for pth in paths:
             pg.goto(BASE + pth)
+            if pth.startswith('/sorteador/'):
+                if pg.locator('#rf-names').is_visible(): pg.fill('#rf-names', NAMES20)
+                if pth.endswith('/equipes/'): pg.fill('#rf-tvalue', '4')
+                pg.click('#rf-draw')
             sw = pg.evaluate('document.documentElement.scrollWidth')
-            check(f'responsivo {w}px sem rolagem horizontal: {pth}', sw <= w, f'scrollWidth={sw}')
+            if sw > w: over.append(f'{pth}={sw}')
+            bad = pg.evaluate("() => [...document.querySelectorAll('h1, h2')].filter(e => e.scrollWidth > e.clientWidth + 1).map(e => e.textContent.trim().slice(0, 30))")
+            if bad: h1over.append(f'{pth}:{bad}')
+        check(f'responsivo {w}px: nenhuma das {len(paths)} páginas rola na horizontal', not over, ', '.join(over))
+        check(f'responsivo {w}px: títulos não estouram a largura', not h1over, ', '.join(h1over))
         c2.close()
+    # chave grande (64 participantes) não pode quebrar a página no celular; a rolagem fica dentro da região da chave
+    cm = b.new_context(viewport={'width': 360, 'height': 800}); pm = cm.new_page(); pm.goto(BASE + '/sorteador/chaves/')
+    pm.fill('#rf-names', '\n'.join(f'Time {i}' for i in range(64))); pm.click('#rf-draw')
+    check('responsivo 360px: chave de 64 participantes rola só dentro da própria região', pm.evaluate('document.documentElement.scrollWidth') <= 360 and pm.evaluate("(() => { const e = document.querySelector('.bracket'); return e.scrollWidth > e.clientWidth; })()"))
+    narrow = pm.evaluate("() => [...document.querySelectorAll('.round')].map(e => Math.round(e.getBoundingClientRect().width))")
+    check('responsivo 360px: cada rodada da chave mantém largura legível (≥ 200px)', narrow and min(narrow) >= 200, str(narrow))
+    broken = pm.evaluate("() => [...document.querySelectorAll('.game .slot')].filter(e => e.getBoundingClientRect().height > parseFloat(getComputedStyle(e).lineHeight) * 2.6).length")
+    check('responsivo 360px: nomes na chave não quebram em várias linhas curtas', broken == 0, str(broken))
+    cm.close()
     mob = b.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=2); pg = mob.new_page()
-    for name, pth in [('home', '/'), ('qr', '/qr-code/'), ('image', '/conversor-de-imagens/')]:
+    for name, pth in [('home', '/'), ('qr', '/qr-code/'), ('image', '/conversor-de-imagens/'), ('numeros', '/sorteador/numeros/'), ('chaves', '/sorteador/chaves/')]:
         pg.goto(BASE + pth); pg.wait_for_timeout(200); pg.screenshot(path=os.path.join(TMP, f'shot-{name}-mobile.png'), full_page=True, caret='initial', animations='allow')
     b.close()
 

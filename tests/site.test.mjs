@@ -172,3 +172,35 @@ test('JS das ferramentas não faz requisições de rede', () => {
     assert.doesNotMatch(readFileSync(join(dir, f), 'utf8'), /\bfetch\(|XMLHttpRequest|sendBeacon|WebSocket/, f);
   }
 });
+
+test('tipografia auto-hospedada: fonte e licença existem, o CSS as usa e não importa nada externo', () => {
+  assert.ok(existsSync(join(out, 'assets/fonts/archivo-latin-wght.woff2')), 'woff2 no build');
+  assert.ok(existsSync(join(out, 'assets/fonts/OFL-Archivo.txt')), 'licença OFL junto da fonte');
+  const css = readFileSync(join(out, 'assets/css/site.css'), 'utf8');
+  assert.match(css, /url\(\/assets\/fonts\/archivo-latin-wght\.woff2\)/);
+  assert.doesNotMatch(css, /@import|https?:\/\//, 'CSS sem recursos externos (CSP e privacidade)');
+  for (const p of pages) assert.match(htmlOf(p), /rel="preload" href="\/assets\/fonts\/archivo-latin-wght\.woff2" as="font" type="font\/woff2" crossorigin/, p.path);
+});
+
+test('home: quatro ferramentas no índice, atalho de QR com download e seção do criador', () => {
+  const html = htmlOf(pages.find((p) => p.path === '/'));
+  assert.equal((html.match(/class="tool-row"/g) || []).length, 4);
+  assert.match(html, /id="demo-download"/);
+  assert.match(html, /id="criador"/);
+  assert.match(html, /assets\/img\/igor-cabral-icon\.png/);
+});
+
+test('todas as páginas levam ao site profissional e exibem a assinatura do autor no rodapé', () => {
+  for (const p of pages) {
+    const html = htmlOf(p);
+    assert.ok(html.includes('href="https://igorcabral.dev.br" rel="noopener"'), `${p.path}: link para o site profissional`);
+    assert.match(html, /<img src="\/assets\/img\/igor-cabral-white\.png"[^>]*alt="igor cabral\. design &amp; web"/, `${p.path}: logo do autor no rodapé`);
+    assert.doesNotMatch(html, /href="\/#servicos"/, `${p.path}: âncora antiga removida`);
+  }
+});
+
+test('o JS das ferramentas não depende de classes visuais removidas', () => {
+  const css = readFileSync(join(out, 'assets/css/site.css'), 'utf8');
+  for (const cls of ['is-over', 'is-done']) assert.ok(css.includes(`.${cls}`), `.${cls} estilizada`);
+  for (const kind of ['ok', 'err', 'warn']) assert.ok(css.includes(`.status.${kind}`), `.status.${kind} estilizado`);
+});

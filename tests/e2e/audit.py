@@ -55,7 +55,7 @@ with sync_playwright() as p:
             pg.keyboard.press('Tab')
             info = pg.evaluate("""() => { const e = document.activeElement; if (!e || e === document.body) return null; const cs = getComputedStyle(e); const vis = (cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0) || cs.boxShadow !== 'none';
               let own = vis; if (!own && e.matches('input[type=radio],input[type=file],input[type=checkbox]')) { const sib = e.nextElementSibling || e.closest('label,.dropzone'); if (sib) { const c2 = getComputedStyle(sib); own = (c2.outlineStyle !== 'none') || c2.boxShadow !== 'none'; const dz = e.closest('.dropzone'); if (dz) { const c3 = getComputedStyle(dz); own = own || c3.boxShadow !== 'none'; } } }
-              const card = e.closest('.tool-card'); if (!own && card) { own = getComputedStyle(card).boxShadow !== 'none'; }
+              const card = e.closest('.tool-row'); if (!own && card) { const cc = getComputedStyle(card); own = cc.outlineStyle !== 'none' && parseFloat(cc.outlineWidth) > 0; }
               const r = e.getBoundingClientRect(); return { tag: e.tagName + (e.id ? '#' + e.id : ''), vis: own, w: r.width, h: r.height }; }""")
             if info is None: break
             n += 1

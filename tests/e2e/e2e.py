@@ -34,10 +34,19 @@ with sync_playwright() as p:
     page.goto(BASE + '/')
     page.wait_for_selector('#demo-canvas:not([hidden])')
     check('home: demo QR visível', page.locator('#demo-canvas').is_visible())
-    check('home: 4 ferramentas listadas', page.locator('.tool-card').count() == 4)
+    check('home: 4 ferramentas listadas', page.locator('.tool-row').count() == 4)
     page.fill('#demo-input', 'https://exemplo.com.br/teste')
     page.wait_for_timeout(300)
     check('home: link do gerador carrega valor', 'v=https%3A%2F%2Fexemplo.com.br%2Fteste' in page.get_attribute('#demo-open', 'href'))
+    with page.expect_download() as dd:
+        page.click('#demo-download')
+    fh = os.path.join(TMP, 'home-qr.png'); dd.value.save_as(fh)
+    check('home: atalho baixa PNG 1024x1024 que decodifica', Image.open(fh).size == (1024, 1024) and decode_png(fh) == 'https://exemplo.com.br/teste', str(Image.open(fh).size))
+    page.fill('#demo-input', '')
+    page.wait_for_timeout(250)
+    check('home: campo vazio esconde o QR e desativa o download', page.locator('#demo-canvas').is_hidden() and page.locator('#demo-download').is_disabled())
+    page.fill('#demo-input', 'https://exemplo.com.br/teste')
+    page.wait_for_timeout(250)
     page.screenshot(path=os.path.join(TMP, 'shot-home-desktop.png'), full_page=True, caret='initial', animations='allow')
 
     # ---------- QR Code ----------

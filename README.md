@@ -19,7 +19,7 @@ npm run dev        # build + serve
 ## Qualidade
 ```bash
 npm run lint       # sintaxe de todos os .js/.mjs + regras (sem fetch/localStorage no frontend)
-npm test           # 56 testes (lógica das ferramentas, SEO, links, a11y estrutural, segredos no bundle, 404)
+npm test           # 60 testes (lógica das ferramentas, SEO, links, a11y estrutural, segredos no bundle, 404)
 npm run check      # lint + testes + build
 npm run test:e2e   # opcional: sobe o servidor local e roda, no Chromium real, tests/e2e/e2e.py (fluxos das 4 ferramentas) e
                    # tests/e2e/audit.py (contraste AA claro/escuro, foco por teclado, alvos de toque).
@@ -78,11 +78,20 @@ O site **não é uma SPA**: cada página tem seu próprio `index.html` (`/qr-cod
 **Não crie** `_redirects` com `/* /index.html 200`: isso transformaria todo endereço inválido em uma página 200 da home (soft 404, ruim para SEO) e não é necessário aqui. Um teste automatizado garante que esse arquivo não exista.
 
 ## Design system
-Baseado no "Caply Precision System" (Google Stitch, `DESIGN.md`): canvas `#F8FAFC`, cards brancos com borda hairline, azul `#1E40AF` como cor primária, ciano `#0284C7`/`#06B6D4` e índigo `#4F46E5` como acentos, raios 8/16/24 px, sombras em 3 níveis, chips e badge "Executado 100% no seu navegador". Tema escuro automático (`prefers-color-scheme`). Tokens em `:root` no topo de `src/assets/css/site.css`.
+Identidade alinhada a [igorcabral.dev.br](https://igorcabral.dev.br): preto `#0a0a0a` (o mesmo `theme-color` do site profissional), azul da marca `#1447b1` (amostrado do ícone do boné) e papel `#f8f8f6`. Uma única família tipográfica, **Archivo** (variável, eixo de peso), auto-hospedada em `src/assets/fonts/` (licença OFL incluída; só o subconjunto latino, ~35 KB). Tokens em `:root` no topo de `src/assets/css/site.css`.
 
-Desvios intencionais do Stitch, por acessibilidade (WCAG AA, medidos): textos de sucesso/erro/aviso usam `#047857`/`#B91C1C`/`#92400E` (os originais `#10B981`/`#EF4444` ficam só em detalhes gráficos); placeholder `#64748B` (em vez de `#94A3B8`); borda de campos `#7C8AA0` (≥ 3:1).
+Princípios aplicados:
+- **Ritmo de seções:** preto (cabeçalho, hero, topo das ferramentas, rodapé) → papel (índice, conteúdo) → azul (privacidade e painéis de resultado). O azul marca onde o resultado aparece; preto e papel organizam o resto.
+- **Ponto final como assinatura:** os títulos terminam em ponto azul, como o "igor cabral." do logotipo (`<span class="dot">`).
+- **Formas retas:** raio de 3 px, bordas de 2 px, sem sombras e sem degradês. Hierarquia por tamanho, peso e cor, não por elevação.
+- **Índice em vez de cartões:** as ferramentas da home são linhas editoriais; a linha inteira é o link e ganha fundo azul no hover/foco.
+- **Tema único:** o site não segue mais `prefers-color-scheme`; o contraste claro/escuro é parte da composição (antes havia um tema escuro automático).
+- Foco visível por contexto (`--focus`), movimento só em resposta a ações (hover, expandir FAQ, status) e `prefers-reduced-motion` respeitado.
+- Contraste AA verificado no navegador (`npm run test:e2e`).
 
-**Fontes.** O Stitch usa Plus Jakarta Sans (títulos) e Inter (texto). Para respeitar a CSP e a privacidade, o site **não** carrega fontes do Google: a pilha CSS usa essas famílias se instaladas e cai para fontes do sistema. Para ativá-las para todos, auto-hospede: baixe os `.woff2` (licença OFL) para `src/assets/fonts/`, adicione `@font-face` no início de `site.css` (`font-display: swap`, `src: url(/assets/fonts/NOME.woff2) format("woff2")`) e rode o build. A CSP atual (`font-src 'self'`) já permite.
+Ativos de marca do autor: `src/assets/img/igor-cabral-white.png` (logotipo branco, rodapé) e `igor-cabral-icon.png` (ícone do boné com fundo transparente, seção do criador). Foram derivados dos arquivos enviados pelo Igor.
+
+**Fontes.** Nada é carregado de serviços externos (CSP `font-src 'self'`). Para trocar a fonte, substitua o `.woff2` e ajuste o `@font-face` no início de `site.css`.
 
 ## Estrutura
 - `src/config.mjs`: nome, URL pública, URL do autor, catálogo de ferramentas.
@@ -92,8 +101,7 @@ Desvios intencionais do Stitch, por acessibilidade (WCAG AA, medidos): textos de
 - Nova ferramenta: entrada em `config.mjs` + página em `src/pages/` + registro em `scripts/build.mjs`.
 
 ## Pendências conhecidas
-- A imagem Open Graph (`src/assets/og-image.png`) é gerada por `scripts/make-og-image.py` (Pillow) e usa fonte do sistema; substitua por arte própria quando quiser.
-- Fontes do design system (Plus Jakarta Sans/Inter) ainda não auto-hospedadas (ver acima).
+- A imagem Open Graph (`src/assets/og-image.png`) é gerada por `scripts/make-og-image.py` (Pillow + fonttools + brotli) com a Archivo do projeto; o QR desenhado nela é ilustrativo, não decodifica.
 - Conversor: em iOS/Safari o limite de área do canvas é menor que os 40 MP aceitos; imagens enormes podem falhar com mensagem de erro (não testado em iOS real).
-- Rodapé e seção de serviços linkam só a raiz `https://igorcabral.dev.br`; atualize quando existirem páginas de portfólio/serviços/contato verificadas.
+- Rodapé, cabeçalho e seção do criador linkam só a raiz `https://igorcabral.dev.br`; atualize quando existirem páginas de portfólio/serviços/contato verificadas.
 - Assistente de IA e links curtos próprios: ver `docs/AVALIACAO.md`.

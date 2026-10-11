@@ -2,7 +2,7 @@ import { site } from '../config.mjs';
 
 export default function privacy() {
   const body = `
-<div class="page-head"><div class="wrap"><p class="crumbs"><a href="/">Início</a> / Privacidade</p><h1>Privacidade</h1><p class="lead">Em resumo: o que você digita ou escolhe nas ferramentas fica no seu navegador.</p></div></div>
+<div class="page-head"><div class="wrap"><p class="crumbs"><a href="/">Início</a> / Privacidade</p><h1>Privacidade<span class="dot">.</span></h1><p class="lead">Em resumo: o que você digita ou escolhe nas ferramentas fica no seu navegador.</p></div></div>
 <div class="wrap"><div class="prose">
   <section class="prose-block">
     <h2>O que acontece com seus dados</h2>

@@ -121,3 +121,5 @@ Converte arquivos de áudio (ou o áudio de vídeos MP4/WebM) para **WAV PCM** (
 - **MP3 como saída não existe** (não há encoder no projeto). Para adicionar: incluir uma biblioteca de MP3 compatível com a licença, registrar `ENCODERS.mp3 = async (channels, sampleRate, opts) => Blob` e trocar `available` para `true` em `OUTPUT_FORMATS` (`audio-lib.js`). Confira a licença (ex.: bibliotecas LGPL) antes.
 - Limites: 50 MB, 10 min e 10 arquivos; resultados guardados acima de 300 MB geram aviso. Contexto de áudio e URLs `blob:` são liberados ao concluir, cancelar, remover ou limpar (verificado por contagem no teste de navegador).
 - A CSP precisa de `media-src 'self' blob:` (já está em `dist/_headers`): sem ela a prévia e a leitura de duração funcionam só em desenvolvimento.
+#   c a p l y - t o o l s  
+ 

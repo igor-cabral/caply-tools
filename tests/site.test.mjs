@@ -18,7 +18,7 @@ before(async () => {
 const htmlOf = (p) => readFileSync(join(out, p.path === '/' ? 'index.html' : (p.file || `${p.path.slice(1)}index.html`)), 'utf8');
 
 test('todas as páginas existem e têm estrutura semântica básica', () => {
-  assert.equal(pages.length, 11);
+  assert.equal(pages.length, 12);
   for (const p of pages) {
     const html = htmlOf(p);
     assert.match(html, /<html lang="pt-BR">/);
@@ -66,7 +66,7 @@ test('links internos e scripts apontam para arquivos reais', () => {
 });
 
 test('ids usados pelo JavaScript de cada ferramenta existem no HTML', () => {
-  const map = { 'home.js': '/', 'qr-tool.js': '/qr-code/', 'whatslink-tool.js': '/whatslink/', 'raffle-tool.js': '/sorteador/', 'image-tool.js': '/conversor-de-imagens/' };
+  const map = { 'home.js': '/', 'qr-tool.js': '/qr-code/', 'whatslink-tool.js': '/whatslink/', 'raffle-tool.js': '/sorteador/', 'image-tool.js': '/conversor-de-imagens/', 'audio-tool.js': '/conversor-de-audio/' };
   for (const [js, path] of Object.entries(map)) {
     const src = readFileSync(join(root, 'src/assets/js', js), 'utf8');
     const html = htmlOf(pages.find((p) => p.path === path));
@@ -105,13 +105,13 @@ const PROD = 'https://tools.igorcabral.dev.br';
 test('padrão de produção: canonical, og:url, sitemap e robots usam tools.igorcabral.dev.br', () => {
   const dir2 = mkdtempSync(join(tmpdir(), 'caply-def-'));
   execFileSync(process.execPath, ['-e', `import('${join(root, 'scripts/build.mjs')}').then(m=>m.build({outDir:${JSON.stringify(dir2)},log:false}))`], { env: Object.fromEntries(Object.entries(process.env).filter(([k]) => k !== 'SITE_URL')), stdio: 'pipe' });
-  for (const [path, file] of [['/', 'index.html'], ['/qr-code/', 'qr-code/index.html'], ['/whatslink/', 'whatslink/index.html'], ['/sorteador/', 'sorteador/index.html'], ['/conversor-de-imagens/', 'conversor-de-imagens/index.html'], ['/privacidade/', 'privacidade/index.html']]) {
+  for (const [path, file] of [['/', 'index.html'], ['/qr-code/', 'qr-code/index.html'], ['/whatslink/', 'whatslink/index.html'], ['/sorteador/', 'sorteador/index.html'], ['/conversor-de-imagens/', 'conversor-de-imagens/index.html'], ['/conversor-de-audio/', 'conversor-de-audio/index.html'], ['/privacidade/', 'privacidade/index.html']]) {
     const html = readFileSync(join(dir2, file), 'utf8');
     assert.ok(html.includes(`<link rel="canonical" href="${PROD}${path}">`), `canonical ${path}`);
     assert.ok(html.includes(`<meta property="og:url" content="${PROD}${path}">`), `og:url ${path}`);
   }
   const sm = readFileSync(join(dir2, 'sitemap.xml'), 'utf8');
-  assert.equal((sm.match(/<loc>/g) || []).length, 10);
+  assert.equal((sm.match(/<loc>/g) || []).length, 11);
   assert.ok(sm.includes(`<loc>${PROD}/</loc>`) && !sm.includes('404') && !sm.includes('localhost'));
   assert.match(readFileSync(join(dir2, 'robots.txt'), 'utf8'), new RegExp(`Sitemap: ${PROD}/sitemap\\.xml`));
   const home = readFileSync(join(dir2, 'index.html'), 'utf8');
@@ -161,7 +161,7 @@ test('com SITE_URL: canonical, og:url e sitemap sem a página 404', () => {
   const sm = readFileSync(join(dir, 'sitemap.xml'), 'utf8');
   assert.match(sm, /<loc>https:\/\/exemplo\.test\/qr-code\/<\/loc>/);
   assert.ok(!sm.includes('404'));
-  assert.equal((sm.match(/<loc>/g) || []).length, 10);
+  assert.equal((sm.match(/<loc>/g) || []).length, 11);
   assert.match(readFileSync(join(dir, 'qr-code/index.html'), 'utf8'), /rel="canonical" href="https:\/\/exemplo\.test\/qr-code\/"/);
   assert.match(readFileSync(join(dir, 'robots.txt'), 'utf8'), /Sitemap: https:\/\/exemplo\.test\/sitemap\.xml/);
 });
@@ -182,9 +182,12 @@ test('tipografia auto-hospedada: fonte e licença existem, o CSS as usa e não i
   for (const p of pages) assert.match(htmlOf(p), /rel="preload" href="\/assets\/fonts\/archivo-latin-wght\.woff2" as="font" type="font\/woff2" crossorigin/, p.path);
 });
 
-test('home: quatro ferramentas no índice, atalho de QR com download e seção do criador', () => {
+test('home: todas as ferramentas do catálogo no índice, atalho de QR com download e seção do criador', async () => {
+  const { tools } = await import('../src/config.mjs');
   const html = htmlOf(pages.find((p) => p.path === '/'));
-  assert.equal((html.match(/class="tool-row"/g) || []).length, 4);
+  assert.equal((html.match(/class="tool-row"/g) || []).length, tools.length);
+  assert.equal(tools.length, 5);
+  for (const t of tools) assert.ok(html.includes(`href="/${t.slug}/"`), `home liga para ${t.slug}`);
   assert.match(html, /id="demo-download"/);
   assert.match(html, /id="criador"/);
   assert.match(html, /assets\/img\/igor-cabral-icon\.png/);
@@ -203,4 +206,12 @@ test('o JS das ferramentas não depende de classes visuais removidas', () => {
   const css = readFileSync(join(out, 'assets/css/site.css'), 'utf8');
   for (const cls of ['is-over', 'is-done']) assert.ok(css.includes(`.${cls}`), `.${cls} estilizada`);
   for (const kind of ['ok', 'err', 'warn']) assert.ok(css.includes(`.status.${kind}`), `.status.${kind} estilizado`);
+});
+
+test('CSP: libera blob: para mídia (prévia do conversor de áudio) sem afrouxar o resto', () => {
+  const headers = readFileSync(join(out, '_headers'), 'utf8');
+  const csp = headers.match(/Content-Security-Policy: (.+)/)[1];
+  assert.match(csp, /media-src 'self' blob:/);
+  assert.match(csp, /default-src 'self'/); assert.match(csp, /script-src 'self'(;|$)/); assert.match(csp, /connect-src 'self'/);
+  assert.doesNotMatch(csp, /unsafe-eval|unsafe-inline|\*|https?:/, 'sem curingas, inline, eval nem hosts externos');
 });

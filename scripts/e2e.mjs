@@ -9,7 +9,7 @@ const server = spawn(process.execPath, ['scripts/serve.mjs', port], { cwd: root,
 await new Promise((r) => setTimeout(r, 1200));
 let code = 0;
 const python = process.platform === 'win32' ? 'python' : 'python3';
-for (const f of ['tests/e2e/e2e.py', 'tests/e2e/audit.py']) {
+for (const f of ['tests/e2e/e2e.py', 'tests/e2e/audio.py', 'tests/e2e/audit.py']) {
   const r = spawnSync(python, [f, `http://localhost:${port}`], { cwd: root, stdio: 'inherit' });
   if (r.status !== 0) code = 1;
 }

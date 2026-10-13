@@ -6,7 +6,7 @@ export default function privacy() {
 <div class="wrap"><div class="prose">
   <section class="prose-block">
     <h2>O que acontece com seus dados</h2>
-    <p>Nenhuma ferramenta do Caply Tools exige cadastro. Textos, links, senhas de Wi-Fi, números de telefone, listas de participantes e imagens são processados localmente pelo seu navegador e não são enviados a nenhum servidor desta plataforma.</p>
+    <p>Nenhuma ferramenta do Caply Tools exige cadastro. Textos, links, senhas de Wi-Fi, números de telefone, listas de participantes, imagens e arquivos de áudio são processados localmente pelo seu navegador e não são enviados a nenhum servidor desta plataforma.</p>
     <p>Os arquivos desta versão do site são estáticos: não há banco de dados, contas de usuário nem endpoints que recebam o que você digita.</p>
   </section>
   <section class="prose-block">

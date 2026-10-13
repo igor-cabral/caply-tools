@@ -1,6 +1,6 @@
 # Caply Tools
 
-Ferramentas online gratuitas, sem cadastro, que processam tudo **no navegador**: Gerador de QR Code (link, texto, Wi-Fi; PNG/SVG), WhatsLink (links `wa.me`), Sorteador (nomes, números, equipes e grupos, ordem, chaves e confrontos) e Conversor de imagens (PNG, JPEG, WebP).
+Ferramentas online gratuitas, sem cadastro, que processam tudo **no navegador**: Gerador de QR Code (link, texto, Wi-Fi; PNG/SVG), WhatsLink (links `wa.me`), Sorteador (nomes, números, equipes e grupos, ordem, chaves e confrontos), Conversor de imagens (PNG, JPEG, WebP) e Conversor de áudio (para WAV).
 
 URL de produção: **https://tools.igorcabral.dev.br**
 
@@ -19,11 +19,13 @@ npm run dev        # build + serve
 ## Qualidade
 ```bash
 npm run lint       # sintaxe de todos os .js/.mjs + regras (sem fetch/localStorage no frontend)
-npm test           # 87 testes (lógica das ferramentas, SEO, links, a11y estrutural, segredos no bundle, 404)
+npm test           # 113 testes (lógica das ferramentas, SEO, links, a11y estrutural, segredos no bundle, 404)
 npm run check      # lint + testes + build
 npm run test:e2e   # opcional: sobe o servidor local e roda, no Chromium real, tests/e2e/e2e.py (fluxos das 4 ferramentas) e
                    # tests/e2e/audit.py (contraste AA claro/escuro, foco por teclado, alvos de toque).
-                   # Requer: python3 com playwright (+ chromium), opencv-python e Pillow.
+                   # Requer: python3 com playwright (+ chromium), opencv-python, Pillow e numpy; ffmpeg/ffprobe para os testes de áudio
+                   # (só nos testes: geram arquivos reais de entrada e decodificam o WAV de saída de forma independente;
+                   # sem ffmpeg, esses testes são pulados e isso é informado).
 ```
 Não existe typecheck: o projeto é JavaScript puro, sem TypeScript.
 
@@ -111,3 +113,11 @@ Uma só interface, uma página por modalidade (cada uma com conteúdo próprio p
 `raffle-lib.js` (nomes, números, ordem, exclusões), `raffle-groups.js` (equipes/grupos e restrições), `raffle-bracket.js` (confrontos e chaves), `raffle-export.js` (copiar, CSV), `raffle-modes.js` (dados das modalidades, usados pelo build e pelo navegador).
 Aleatoriedade: `crypto.getRandomValues` com amostragem por rejeição (sem viés de módulo), Fisher–Yates e, para números sem repetição, o algoritmo de Floyd. A ferramenta **não** é certificada nem auditável e não se anuncia como tal.
 Limites: 10.000 participantes, nomes de até 120 caracteres, 10.000 resultados por sorteio, intervalo de até 2³² números, chave de até 256 participantes.
+
+## Conversor de áudio (`/conversor-de-audio/`)
+Converte arquivos de áudio (ou o áudio de vídeos MP4/WebM) para **WAV PCM** (16 ou 24 bits; 44,1/48/22,05/16 kHz; manter ou mono), com fila, prévia, download, progresso e cancelamento. Tudo local, sem enviar arquivos.
+- `audio-lib.js`: limites, detecção do formato pelos bytes, validação, estimativas e mensagens (puro, testado em Node). `audio-wav.js`: codificador WAV em blocos (progresso e cancelamento reais). `audio-convert.js`: pipeline no navegador (Web Audio `decodeAudioData` → canais/taxa → WAV) e **registro de encoders** (`ENCODERS`). `audio-tool.js`: interface.
+- **Entrada** = o que o navegador decodifica (detectado em tempo de execução; a lista é uma estimativa). Em teste com Chromium: WAV, MP3, OGG, FLAC e WebM/Opus funcionam; **M4A/AAC não** (a ferramenta avisa antes e explica o erro).
+- **MP3 como saída não existe** (não há encoder no projeto). Para adicionar: incluir uma biblioteca de MP3 compatível com a licença, registrar `ENCODERS.mp3 = async (channels, sampleRate, opts) => Blob` e trocar `available` para `true` em `OUTPUT_FORMATS` (`audio-lib.js`). Confira a licença (ex.: bibliotecas LGPL) antes.
+- Limites: 50 MB, 10 min e 10 arquivos; resultados guardados acima de 300 MB geram aviso. Contexto de áudio e URLs `blob:` são liberados ao concluir, cancelar, remover ou limpar (verificado por contagem no teste de navegador).
+- A CSP precisa de `media-src 'self' blob:` (já está em `dist/_headers`): sem ela a prévia e a leitura de duração funcionam só em desenvolvimento.

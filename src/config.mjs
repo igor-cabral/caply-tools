@@ -58,6 +58,16 @@ export const tools = [
     metaDescription: 'Converta imagens entre PNG, JPEG e WebP no próprio navegador. Suas fotos não são enviadas a nenhum servidor. Grátis e sem cadastro.',
     icon: ic('<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.6"/><path d="m4 18 5-5 3 3 3-4 5 6"/>'),
   },
+  {
+    slug: 'conversor-de-audio',
+    tags: ['WAV', 'Prévia', 'Fila'],
+    name: 'Conversor de áudio',
+    short: 'Conversor de áudio',
+    summary: 'Converta arquivos de áudio para WAV no navegador, com prévia e download.',
+    metaTitle: 'Conversor de áudio para WAV online grátis | Caply Tools',
+    metaDescription: 'Converta arquivos de áudio para WAV no navegador, com prévia e download. Sem enviar arquivos a servidores. Os formatos aceitos dependem do seu navegador.',
+    icon: ic('<path d="M4 10v4M8 6v12M12 3v18M16 8v8M20 11v2"/>'),
+  },
 ];
 
 export const toolBySlug = Object.fromEntries(tools.map((t) => [t.slug, t]));

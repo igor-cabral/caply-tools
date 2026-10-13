@@ -4,7 +4,7 @@ import sys
 from playwright.sync_api import sync_playwright
 
 BASE = sys.argv[1] if len(sys.argv) > 1 else 'http://localhost:4173'
-PATHS = ['/', '/qr-code/', '/whatslink/', '/sorteador/', '/sorteador/numeros/', '/sorteador/equipes/', '/sorteador/ordem/', '/sorteador/chaves/', '/conversor-de-imagens/', '/privacidade/', '/nao-existe']
+PATHS = ['/', '/qr-code/', '/whatslink/', '/sorteador/', '/sorteador/numeros/', '/sorteador/equipes/', '/sorteador/ordem/', '/sorteador/chaves/', '/conversor-de-imagens/', '/conversor-de-audio/', '/privacidade/', '/nao-existe']
 
 CONTRAST_JS = r"""
 () => {
@@ -58,10 +58,15 @@ with sync_playwright() as p:
             info = pg.evaluate("""() => { const e = document.activeElement; if (!e || e === document.body) return null; const cs = getComputedStyle(e); const vis = (cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0) || cs.boxShadow !== 'none';
               let own = vis; if (!own && e.matches('input[type=radio],input[type=file],input[type=checkbox]')) { const sib = e.nextElementSibling || e.closest('label,.dropzone'); if (sib) { const c2 = getComputedStyle(sib); own = (c2.outlineStyle !== 'none') || c2.boxShadow !== 'none'; const dz = e.closest('.dropzone'); if (dz) { const c3 = getComputedStyle(dz); own = own || c3.boxShadow !== 'none'; } } }
               const card = e.closest('.tool-row'); if (!own && card) { const cc = getComputedStyle(card); own = cc.outlineStyle !== 'none' && parseFloat(cc.outlineWidth) > 0; }
-              const r = e.getBoundingClientRect(); return { tag: e.tagName + (e.id ? '#' + e.id : ''), vis: own, w: r.width, h: r.height }; }""")
+              const rgb = (str) => { const m = (str || '').match(/[\\d.]+/g); return m ? m.slice(0, 4).map(Number) : null; };
+              const lum = (c) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
+              let bgc = [255, 255, 255]; for (let a = e.parentElement; a; a = a.parentElement) { const c = rgb(getComputedStyle(a).backgroundColor); if (c && (c.length < 4 || c[3] > 0.95) && !(c[0] === 0 && c[1] === 0 && c[2] === 0 && c.length === 4 && c[3] === 0)) { bgc = c; break; } }
+              let ratio = 99; if (cs.outlineStyle !== 'none' && parseFloat(cs.outlineWidth) > 0) { const oc = rgb(cs.outlineColor); if (oc) { const l1 = lum(oc), l2 = lum(bgc); ratio = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05); } }
+              const r = e.getBoundingClientRect(); return { tag: e.tagName + (e.id ? '#' + e.id : ''), vis: own, ratio, w: r.width, h: r.height }; }""")
             if info is None: break
             n += 1
             if not info['vis']: missing.append(info['tag'])
+            elif info.get('ratio', 99) < 3: missing.append(info['tag'] + f" (contraste do foco {info['ratio']:.1f}:1)")
         check(f'foco visível em todos os {n} elementos tabuláveis {path}', n > 3 and not missing, ','.join(missing))
     # alvos de toque no mobile (≥ 24px WCAG 2.2; botões/campos ≥ 40px)
     ctx = b.new_context(viewport={'width': 360, 'height': 800}); pg = ctx.new_page()

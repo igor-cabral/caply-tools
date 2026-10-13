@@ -34,7 +34,7 @@ with sync_playwright() as p:
     page.goto(BASE + '/')
     page.wait_for_selector('#demo-canvas:not([hidden])')
     check('home: demo QR visível', page.locator('#demo-canvas').is_visible())
-    check('home: 4 ferramentas listadas', page.locator('.tool-row').count() == 4)
+    check('home: 5 ferramentas listadas', page.locator('.tool-row').count() == 5)
     page.fill('#demo-input', 'https://exemplo.com.br/teste')
     page.wait_for_timeout(300)
     check('home: link do gerador carrega valor', 'v=https%3A%2F%2Fexemplo.com.br%2Fteste' in page.get_attribute('#demo-open', 'href'))
@@ -313,7 +313,7 @@ with sync_playwright() as p:
     check('sem erros/avisos de console nem violações de CSP', not errors, '; '.join(errors)[:600])
 
     # ---------- Responsividade (7 larguras, todas as páginas, com e sem resultado na tela) ----------
-    paths = ['/', '/qr-code/', '/whatslink/', '/sorteador/', '/sorteador/numeros/', '/sorteador/equipes/', '/sorteador/ordem/', '/sorteador/chaves/', '/conversor-de-imagens/', '/privacidade/', '/nao-existe']
+    paths = ['/', '/qr-code/', '/whatslink/', '/sorteador/', '/sorteador/numeros/', '/sorteador/equipes/', '/sorteador/ordem/', '/sorteador/chaves/', '/conversor-de-imagens/', '/conversor-de-audio/', '/privacidade/', '/nao-existe']
     NAMES20 = '\n'.join(f'Participante com nome comprido número {i}' for i in range(1, 21))
     for w in (320, 360, 390, 768, 1024, 1280, 1920):
         c2 = b.new_context(viewport={'width': w, 'height': 800}); pg = c2.new_page()

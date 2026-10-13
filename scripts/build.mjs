@@ -9,6 +9,7 @@ import qr from '../src/pages/qr.mjs';
 import whatslink from '../src/pages/whatslink.mjs';
 import raffle from '../src/pages/raffle.mjs';
 import image from '../src/pages/image.mjs';
+import audio from '../src/pages/audio.mjs';
 import privacy from '../src/pages/privacy.mjs';
 import notFound from '../src/pages/notfound.mjs';
 
@@ -22,7 +23,7 @@ export function build({ outDir = join(root, 'dist'), log = true } = {}) {
   mkdirSync(outDir, { recursive: true });
   cpSync(join(root, 'src', 'assets'), join(outDir, 'assets'), { recursive: true });
 
-  const pages = [home, qr, whatslink, raffle, image, privacy, notFound].flatMap((fn) => [].concat(fn()));
+  const pages = [home, qr, whatslink, raffle, image, audio, privacy, notFound].flatMap((fn) => [].concat(fn()));
   for (const p of pages) {
     const file = p.file || `${p.path.replace(/^\/|\/$/g, '')}/index.html`.replace(/^\//, '');
     const target = join(outDir, p.path === '/' ? 'index.html' : file);
@@ -44,7 +45,7 @@ export function build({ outDir = join(root, 'dist'), log = true } = {}) {
   writeFileSync(join(outDir, 'robots.txt'), robots);
 
   // Cabeçalhos de segurança (Netlify/Cloudflare Pages). Para outros hosts, replique no servidor.
-  const csp = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
+  const csp = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
   writeFileSync(join(outDir, '_headers'), `/*\n  Content-Security-Policy: ${csp}\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  Cross-Origin-Opener-Policy: same-origin\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n`);
 
   if (log) console.log(`Build concluído em ${outDir}: ${pages.length} páginas (${indexable.length} indexáveis). URL pública: ${site.siteUrl || '(nenhuma)'}`);
